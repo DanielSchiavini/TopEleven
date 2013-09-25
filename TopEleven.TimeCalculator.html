@@ -1,0 +1,135 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+	<title>Top Eleven Time Calculator</title>
+	<style type="text/css">
+		body
+		{
+			background: url("http://cdn.nordeus.com/wpctopeleven/themes/topeleven/images/background.jpg") no-repeat scroll center top #060B0E;
+			color: #fff;
+			font-face: Helvetica Arial sans-serif;
+		}
+		
+		h2 { margin-left: 40px; }
+		.wrapper { margin: auto; width: 300px; }
+		label { width: 180px; display: block; float:left; }
+		input[type=text] { width: 60px; }
+		.buttons { margin-left: 170px; }
+	</style>
+</head>
+<body>
+	<div class="wrapper">
+		<h1><img src="http://cdn.nordeus.com/wpctopeleven/themes/topeleven/images/logo-header.png" alt="Top Eleven" /></h1>
+		<h2>Time Calculator</h2>
+		
+		<form onSubmit="return false;">
+			<div>
+				<label>Now: </label>
+				<input type="text" id="now" value="" maxlength="5" />
+			</div>
+			
+			<div>
+				<label>Next recover time: </label>
+				<input type="text" id="recoverTime" value="" maxlength="4" />
+			</div>
+			
+			<div>
+				<label>Match start time: </label>
+				<input type="text" id="matchTime" value="" maxlength="7" />
+			</div>
+			
+			<div class="buttons">
+				<input type="submit" id="button" value="Calculate" onClick="calculateTime()" />
+			</div>
+			
+			<div>
+				<label>You should train up to: </label>
+				<input type="text" id="trainPercent" value="?" readonly="yes" />
+			</div>
+		</form>
+	</div>
+	
+	<script type="text/javascript">
+		var nowInput = document.getElementById('now');
+		var recoverTimeInput = document.getElementById('recoverTime');
+		var matchTimeInput = document.getElementById('matchTime');
+		var trainPercentInput = document.getElementById('trainPercent');
+		
+		var HOUR = 60;
+		var DAY = 24 * HOUR;
+		
+		nowInput.value = showSpan(toSpan(new Date()));
+		
+		function showSpan(mins) {
+			var str = "";
+			if (mins > DAY) {
+				str += parseInt(mins / DAY);
+				str += '.';
+				mins %= DAY;
+			}
+			
+			str += parseInt(mins / HOUR);
+			str += ":";
+			mins %= HOUR;
+			
+			if (mins < 10) {
+				str += '0';
+			}
+			
+			str += mins;
+			return str;
+		}
+		
+		function toSpan(date) {
+			return date.getHours() * HOUR + date.getMinutes();
+		}
+		
+		function parseSpan(str) {
+			var span = 0;
+			var i = str.indexOf('.');
+			if (i >= 0) {
+				span += parseInt(str) * DAY;
+				str = str.substr(i + 1);
+			}
+			
+			span += parseInt(str) * HOUR;
+			
+			i = str.indexOf(':');
+			if (i >= 0) {
+				str = str.substr(i + 1);
+				span += parseInt(str);
+			}
+			
+			return span;
+		}
+		
+		function calculateTime() {
+			try {
+				var recoverTime = parseSpan(recoverTimeInput.value);
+				var matchTime = parseSpan(matchTimeInput.value);
+				var now = parseSpan(nowInput.value);
+				
+				trainPercentInput.value = calculatePercentage(recoverTime, matchTime, now) + '%';
+			}
+			catch (ex) {
+				alert(ex.toString());
+			}
+		}
+
+		function calculatePercentage(recoverTime, matchTime, now) {
+			if (recoverTime > 3*HOUR || recoverTime < 0) {
+				throw "Recover time is out of range";
+			}
+
+			var firstRecovery = recoverTime + now;
+			var totalTime = matchTime - firstRecovery;
+			if (totalTime < 0) {
+				totalTime += DAY;
+			}
+
+			var recoverCount = parseInt(totalTime / (3*HOUR));
+			return 95 - recoverCount * 5;
+		}
+	</script>
+</body>
+</html>
